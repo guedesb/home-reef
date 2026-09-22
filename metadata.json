@@ -1,0 +1,6 @@
+{
+  "name": "Recife de Casa",
+  "description": "Prontuário histórico e telemetria analítica para aquário marinho.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
