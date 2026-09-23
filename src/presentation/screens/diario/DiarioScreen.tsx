@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LocalDatabase } from '../../../data/database';
-import { runAnalyticalEngineTests, TestResult } from '../../../domain/analytics_engine.test';
+import { runAnalyticalEngineTests, TestResult } from '../../../domain/analytics_verifier';
 import { Alimentacao, Aquario, Diario, Manutencao } from '../../../domain/models';
 import { NovaAlimentacaoModal } from './NovaAlimentacaoModal';
 import { NovaManutencaoModal } from './NovaManutencaoModal';
@@ -13,9 +13,17 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
   const [diarios, setDiarios] = useState<Diario[]>(LocalDatabase.getDiarios(aquario.id));
   const [manutencoes, setManutencoes] = useState<Manutencao[]>(LocalDatabase.getManutencoes(aquario.id));
   const [alimentacoes, setAlimentacoes] = useState<Alimentacao[]>(LocalDatabase.getAlimentacoes(aquario.id));
+
+  // Modals de criação/edição
   const [showNovoDiario, setShowNovoDiario] = useState(false);
+  const [diarioEditando, setDiarioEditando] = useState<Diario | null>(null);
+
   const [showNovaManutencao, setShowNovaManutencao] = useState(false);
+  const [manutencaoEditando, setManutencaoEditando] = useState<Manutencao | null>(null);
+
   const [showNovaAlimentacao, setShowNovaAlimentacao] = useState(false);
+  const [alimentacaoEditando, setAlimentacaoEditando] = useState<Alimentacao | null>(null);
+
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [filtroTipo, setFiltroTipo] = useState<string>('todos');
@@ -29,6 +37,26 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
     new Set(diarios.flatMap(d => d.tags || []))
   );
 
+  const handleAbrirNovoDiario = () => {
+    setDiarioEditando(null);
+    setTexto('');
+    setTagsInput('Geral, Manutenção');
+    setShowNovoDiario(true);
+  };
+
+  const handleEditarDiario = (d: Diario) => {
+    setDiarioEditando(d);
+    setTexto(d.texto);
+    setTagsInput((d.tags || []).join(', '));
+    setShowNovoDiario(true);
+  };
+
+  const handleDeleteDiario = (id: string) => {
+    if (!window.confirm('Deseja realmente excluir esta anotação do diário?')) return;
+    LocalDatabase.deleteDiario(id);
+    setDiarios(diarios.filter(d => d.id !== id));
+  };
+
   const handleSalvarDiario = (e: React.FormEvent) => {
     e.preventDefault();
     if (!texto.trim()) return;
@@ -37,14 +65,26 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
       .map(t => t.trim())
       .filter(Boolean);
 
-    const novo = LocalDatabase.addDiario({
-      aquario_id: aquario.id,
-      data: new Date().toISOString().slice(0, 10),
-      texto: texto.trim(),
-      tags: tags.length > 0 ? tags : ['Geral']
-    });
-    setDiarios([novo, ...diarios]);
+    if (diarioEditando) {
+      const atualizado: Diario = {
+        ...diarioEditando,
+        texto: texto.trim(),
+        tags: tags.length > 0 ? tags : ['Geral']
+      };
+      LocalDatabase.updateDiario(atualizado);
+      setDiarios(diarios.map(d => (d.id === atualizado.id ? atualizado : d)));
+    } else {
+      const novo = LocalDatabase.addDiario({
+        aquario_id: aquario.id,
+        data: new Date().toISOString().slice(0, 10),
+        texto: texto.trim(),
+        tags: tags.length > 0 ? tags : ['Geral']
+      });
+      setDiarios([novo, ...diarios]);
+    }
+
     setTexto('');
+    setDiarioEditando(null);
     setShowNovoDiario(false);
   };
 
@@ -55,18 +95,66 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
     }
   };
 
+  const handleAbrirNovaManutencao = () => {
+    setManutencaoEditando(null);
+    setShowNovaManutencao(true);
+  };
+
+  const handleEditarManutencao = (m: Manutencao) => {
+    setManutencaoEditando(m);
+    setShowNovaManutencao(true);
+  };
+
+  const handleDeleteManutencao = (id: string) => {
+    if (!window.confirm('Deseja excluir este registro de manutenção?')) return;
+    LocalDatabase.deleteManutencao(id);
+    setManutencoes(manutencoes.filter(m => m.id !== id));
+  };
+
+  const handleSavedManutencao = (salva: Manutencao) => {
+    if (manutencaoEditando) {
+      setManutencoes(manutencoes.map(m => (m.id === salva.id ? salva : m)));
+    } else {
+      setManutencoes([salva, ...manutencoes]);
+    }
+    setManutencaoEditando(null);
+    setShowNovaManutencao(false);
+  };
+
+  const handleAbrirNovaAlimentacao = () => {
+    setAlimentacaoEditando(null);
+    setShowNovaAlimentacao(true);
+  };
+
+  const handleEditarAlimentacao = (al: Alimentacao) => {
+    setAlimentacaoEditando(al);
+    setShowNovaAlimentacao(true);
+  };
+
+  const handleDeleteAlimentacao = (id: string) => {
+    if (!window.confirm('Deseja excluir este registro de alimentação?')) return;
+    LocalDatabase.deleteAlimentacao(id);
+    setAlimentacoes(alimentacoes.filter(a => a.id !== id));
+  };
+
+  const handleSavedAlimentacao = (salva: Alimentacao) => {
+    if (alimentacaoEditando) {
+      setAlimentacoes(alimentacoes.map(a => (a.id === salva.id ? salva : a)));
+    } else {
+      setAlimentacoes([salva, ...alimentacoes]);
+    }
+    setAlimentacaoEditando(null);
+    setShowNovaAlimentacao(false);
+  };
+
   const diariosFiltrados = diarios.filter(d => {
     const matchTag = tagFiltro === 'todas' || d.tags?.includes(tagFiltro);
-    const matchBusca = !buscaTexto.trim() || 
+    const matchBusca =
+      !buscaTexto.trim() ||
       d.texto.toLowerCase().includes(buscaTexto.toLowerCase()) ||
       d.tags?.some(t => t.toLowerCase().includes(buscaTexto.toLowerCase()));
     return matchTag && matchBusca;
   });
-
-  const handleSavedManutencao = (nova: Manutencao) => {
-    setManutencoes([nova, ...manutencoes]);
-    setShowNovaManutencao(false);
-  };
 
   const executarTestes = () => {
     const res = runAnalyticalEngineTests();
@@ -98,93 +186,91 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
           </h2>
           <p className="text-xs text-[#879390]">Prontuário histórico do aquarista</p>
         </div>
-        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+        <div className="flex gap-1.5">
           <button
             onClick={executarTestes}
-            title="Executar Testes do Motor Analítico"
-            className="p-2 rounded-lg bg-[#0d1d26] border border-[#273741] hover:border-[#77dcce] text-[#77dcce] flex items-center justify-center text-xs"
+            className="flex items-center gap-1 bg-[#1c2c35] hover:bg-[#273741] text-[#77dcce] border border-[#77dcce]/30 font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all shadow"
+            title="Rodar testes unitários do motor analítico"
           >
-            <span className="material-symbols-outlined text-[18px]">bug_report</span>
+            <span className="material-symbols-outlined text-[16px]">verified</span>
+            <span className="hidden sm:inline">Testes</span>
           </button>
           <button
-            onClick={() => setShowNovaAlimentacao(true)}
-            className="flex items-center gap-1 bg-[#1c2c35] hover:bg-[#273741] border border-[#273741] text-[#8bcff2] font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
+            onClick={handleAbrirNovaManutencao}
+            className="flex items-center gap-1 bg-[#005e7d] hover:bg-[#00749b] text-[#d3e5f2] font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all shadow"
           >
-            <span className="material-symbols-outlined text-[15px]">restaurant</span>
-            <span>+ Dieta</span>
-          </button>
-          <button
-            onClick={() => setShowNovaManutencao(true)}
-            className="flex items-center gap-1 bg-[#1c2c35] hover:bg-[#273741] border border-[#273741] text-[#77dcce] font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
-          >
-            <span className="material-symbols-outlined text-[15px]">build</span>
+            <span className="material-symbols-outlined text-[16px]">build</span>
             <span>+ Manutenção</span>
           </button>
           <button
-            onClick={() => setShowNovoDiario(true)}
+            onClick={handleAbrirNovoDiario}
             className="flex items-center gap-1 bg-[#77dcce] hover:bg-[#5ac0b3] text-[#003732] font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all shadow"
           >
-            <span className="material-symbols-outlined text-[15px]">edit_note</span>
+            <span className="material-symbols-outlined text-[16px]">edit_note</span>
             <span>+ Diário</span>
           </button>
         </div>
       </div>
 
-      {/* Painel de Estatística de TPA */}
-      <div className="grid grid-cols-2 gap-2 bg-[#11212b] border border-[#273741] rounded-lg p-3">
-        <div className="flex flex-col">
-          <span className="font-mono text-[9px] uppercase text-[#879390]">Última TPA</span>
-          <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="font-mono text-base font-semibold text-[#77dcce]">
-              {ultimaTpa ? `${ultimaTpa.volume_tpa || 0}L` : 'Nenhuma'}
+      {/* Resumo Operacional de TPAs */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="p-2.5 rounded-xl bg-[#0d1d26] border border-[#273741]">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[#879390]">
+              Última TPA
             </span>
-            {ultimaTpa && (
-              <span className="font-mono text-[10px] text-[#879390]">
-                ({new Date(ultimaTpa.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })})
-              </span>
-            )}
+            <span className="material-symbols-outlined text-[#77dcce] text-[16px]">water_drop</span>
           </div>
-          <span className="text-[10px] text-[#879390] truncate">
-            {ultimaTpa?.sal_marca || 'Água deionizada'}
-          </span>
+          <div className="font-mono text-xs font-bold text-[#d3e5f2] mt-0.5">
+            {ultimaTpa
+              ? new Date(ultimaTpa.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+              : 'Nenhuma'}
+          </div>
+          <div className="text-[10px] text-[#879390]">
+            {ultimaTpa?.volume_tpa ? `${ultimaTpa.volume_tpa} Litros trocados` : 'Sem registro'}
+          </div>
         </div>
 
-        <div className="flex flex-col border-l border-[#273741] pl-3">
-          <span className="font-mono text-[9px] uppercase text-[#879390]">Volume Acumulado</span>
-          <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="font-mono text-base font-semibold text-[#8bcff2]">
-              {totalTpaLitros}L
+        <div className="p-2.5 rounded-xl bg-[#0d1d26] border border-[#273741]">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-wider text-[#879390]">
+              Total TPA Acumulado
             </span>
-            <span className="font-mono text-[10px] text-[#879390]">trocados</span>
+            <span className="material-symbols-outlined text-[#8bcff2] text-[16px]">opacity</span>
           </div>
-          <span className="text-[10px] text-[#879390]">
-            {(totalTpaLitros / (aquario.volume_sistema || 1)).toFixed(1)}x vol. aquário
-          </span>
+          <div className="font-mono text-xs font-bold text-[#8bcff2] mt-0.5">
+            {totalTpaLitros} L
+          </div>
+          <div className="text-[10px] text-[#879390]">
+            Volume do sistema: {aquario.volume_sistema} L
+          </div>
         </div>
       </div>
 
-      {/* Seção de Manutenções Recentes com Filtro */}
-      <section className="bg-[#11212b] border border-[#273741] rounded-lg p-3 space-y-2.5">
+      {/* Seção de Manutenções e TPAs */}
+      <section className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[#77dcce] text-[18px]">build</span>
+            <span className="material-symbols-outlined text-[#77dcce] text-[18px]">build_circle</span>
             <h3 className="font-sans text-xs font-semibold text-[#d3e5f2] uppercase tracking-wider">
-              Registro de Manutenções
+              Manutenções e Trocas Parciais ({manutencoesFiltradas.length})
             </h3>
           </div>
-          <div className="flex gap-1">
+          
+          {/* Filtro de tipos de manutenção */}
+          <div className="flex items-center gap-1">
             {[
-              { id: 'todos', label: 'Todas' },
-              { id: 'tpa', label: 'TPA' },
+              { id: 'todos', label: 'Tudo' },
+              { id: 'tpa', label: 'TPAs' },
               { id: 'equipamentos', label: 'Equip.' }
             ].map(f => (
               <button
                 key={f.id}
                 onClick={() => setFiltroTipo(f.id)}
-                className={`px-2 py-0.5 rounded font-mono text-[10px] transition-colors border ${
+                className={`font-mono text-[9px] px-2 py-0.5 rounded transition-colors ${
                   filtroTipo === f.id
-                    ? 'bg-[#273741] border-[#77dcce] text-[#77dcce] font-semibold'
-                    : 'bg-[#0d1d26] border-[#273741] text-[#879390]'
+                    ? 'bg-[#273741] text-[#77dcce] font-bold'
+                    : 'text-[#879390] hover:text-[#bdc9c6]'
                 }`}
               >
                 {f.label}
@@ -196,7 +282,7 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
         <div className="space-y-2">
           {manutencoesFiltradas.length === 0 ? (
             <div className="p-3 text-center text-xs text-[#879390] bg-[#0d1d26] rounded border border-[#273741]">
-              Nenhuma manutenção encontrada para o filtro selecionado.
+              Nenhum registro de manutenção para este filtro.
             </div>
           ) : (
             manutencoesFiltradas.map(m => {
@@ -212,7 +298,7 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
                 : 'build';
 
               return (
-                <div key={m.id} className="p-2.5 rounded-lg bg-[#0d1d26] border border-[#273741] flex items-start gap-2.5">
+                <div key={m.id} className="p-2.5 rounded-lg bg-[#0d1d26] border border-[#273741] flex items-start gap-2.5 group">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
                     isTpa ? 'bg-[#77dcce]/10 text-[#77dcce]' : 'bg-[#8bcff2]/10 text-[#8bcff2]'
                   }`}>
@@ -221,9 +307,25 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center">
                       <span className="font-sans text-xs font-semibold text-[#d3e5f2]">{m.tipo}</span>
-                      <span className="font-mono text-[10px] text-[#879390]">
-                        {new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • {new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-[10px] text-[#879390]">
+                          {new Date(m.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • {new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <button
+                          onClick={() => handleEditarManutencao(m)}
+                          className="text-[#879390] hover:text-[#77dcce] p-0.5 rounded transition-colors"
+                          title="Editar manutenção"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteManutencao(m.id)}
+                          className="text-[#879390] hover:text-[#ffb4ab] p-0.5 rounded transition-colors"
+                          title="Excluir manutenção"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">delete</span>
+                        </button>
+                      </div>
                     </div>
                     <p className="text-xs text-[#bdc9c6] mt-0.5">{m.descricao}</p>
                     
@@ -263,7 +365,7 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
             </h3>
           </div>
           <button
-            onClick={() => setShowNovaAlimentacao(true)}
+            onClick={handleAbrirNovaAlimentacao}
             className="text-xs text-[#8bcff2] hover:underline font-mono"
           >
             + Registrar
@@ -273,20 +375,36 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
         <div className="space-y-2">
           {alimentacoes.length === 0 ? (
             <div className="p-3 text-center text-xs text-[#879390] bg-[#0d1d26] rounded border border-[#273741]">
-              Nenhuma alimentação registrada. Clique em "+ Dieta" para registrar.
+              Nenhuma alimentação registrada. Clique em "+ Registrar" para adicionar.
             </div>
           ) : (
-            alimentacoes.slice(0, 4).map(al => (
-              <div key={al.id} className="p-2.5 rounded-lg bg-[#0d1d26] border border-[#273741] flex items-start gap-2.5">
+            alimentacoes.map(al => (
+              <div key={al.id} className="p-2.5 rounded-lg bg-[#0d1d26] border border-[#273741] flex items-start gap-2.5 group">
                 <div className="w-7 h-7 rounded-lg bg-[#8bcff2]/10 text-[#8bcff2] flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="material-symbols-outlined text-[16px]">restaurant</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
                     <span className="font-sans text-xs font-semibold text-[#d3e5f2]">{al.alimento}</span>
-                    <span className="font-mono text-[10px] text-[#879390]">
-                      {new Date(al.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • {new Date(al.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono text-[10px] text-[#879390]">
+                        {new Date(al.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • {new Date(al.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <button
+                        onClick={() => handleEditarAlimentacao(al)}
+                        className="text-[#879390] hover:text-[#77dcce] p-0.5 rounded transition-colors"
+                        title="Editar alimentação"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAlimentacao(al.id)}
+                        className="text-[#879390] hover:text-[#ffb4ab] p-0.5 rounded transition-colors"
+                        title="Excluir alimentação"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="font-mono text-[10px] text-[#77dcce] px-1.5 py-0.2 rounded bg-[#1c2c35]">
@@ -375,22 +493,40 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
           </div>
         ) : (
           diariosFiltrados.map(d => (
-            <div key={d.id} className="p-3 rounded-lg bg-[#11212b] border border-[#273741] space-y-2 hover:border-[#77dcce]/40 transition-colors">
+            <div key={d.id} className="p-3 rounded-lg bg-[#11212b] border border-[#273741] space-y-2 hover:border-[#77dcce]/40 transition-colors group">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs font-bold text-[#77dcce] flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">calendar_today</span>
                   {new Date(d.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                 </span>
-                <div className="flex flex-wrap gap-1 justify-end">
-                  {d.tags?.map(t => (
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {d.tags?.map(t => (
+                      <button
+                        key={t}
+                        onClick={() => setTagFiltro(t)}
+                        className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[#0d1d26] hover:bg-[#1c2c35] border border-[#273741] text-[#8bcff2] transition-colors"
+                      >
+                        #{t}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1 border-l border-[#273741] pl-1.5">
                     <button
-                      key={t}
-                      onClick={() => setTagFiltro(t)}
-                      className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[#0d1d26] hover:bg-[#1c2c35] border border-[#273741] text-[#8bcff2] transition-colors"
+                      onClick={() => handleEditarDiario(d)}
+                      className="text-[#879390] hover:text-[#77dcce] p-0.5 rounded transition-colors"
+                      title="Editar diário"
                     >
-                      #{t}
+                      <span className="material-symbols-outlined text-[14px]">edit</span>
                     </button>
-                  ))}
+                    <button
+                      onClick={() => handleDeleteDiario(d.id)}
+                      className="text-[#879390] hover:text-[#ffb4ab] p-0.5 rounded transition-colors"
+                      title="Excluir diário"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <p className="text-xs text-[#d3e5f2] whitespace-pre-line leading-relaxed">{d.texto}</p>
@@ -399,14 +535,16 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
         )}
       </section>
 
-      {/* Modal Novo Diário com Tags Sugeridas */}
+      {/* Modal Novo / Editar Diário com Tags Sugeridas */}
       {showNovoDiario && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-3">
-          <div className="bg-[#11212b] border border-[#273741] w-full max-w-md rounded-xl p-4 space-y-3.5 shadow-2xl animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 animate-in fade-in">
+          <div className="bg-[#11212b] border border-[#273741] w-full max-w-md rounded-xl p-4 space-y-3.5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#273741] pb-2">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#77dcce] text-[18px]">edit_note</span>
-                <h3 className="font-sans text-sm font-semibold text-[#d3e5f2]">Nova Entrada no Diário</h3>
+                <h3 className="font-sans text-sm font-semibold text-[#d3e5f2]">
+                  {diarioEditando ? 'Editar Entrada no Diário' : 'Nova Entrada no Diário'}
+                </h3>
               </div>
               <button
                 onClick={() => setShowNovoDiario(false)}
@@ -470,7 +608,7 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
                   type="submit"
                   className="flex-1 py-2.5 rounded-lg bg-[#77dcce] hover:bg-[#5ac0b3] text-[#003732] text-xs font-semibold shadow"
                 >
-                  Salvar Registro
+                  {diarioEditando ? 'Salvar Alterações' : 'Salvar Registro'}
                 </button>
               </div>
             </form>
@@ -478,24 +616,29 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
         </div>
       )}
 
-      {/* Modal Nova Manutenção (Com TPA detalhada) */}
+      {/* Modal Nova / Editar Manutenção */}
       {showNovaManutencao && (
         <NovaManutencaoModal
           aquario={aquario}
-          onClose={() => setShowNovaManutencao(false)}
+          onClose={() => {
+            setShowNovaManutencao(false);
+            setManutencaoEditando(null);
+          }}
           onSaved={handleSavedManutencao}
+          manutencaoParaEditar={manutencaoEditando}
         />
       )}
 
-      {/* Modal Nova Alimentação */}
+      {/* Modal Nova / Editar Alimentação */}
       {showNovaAlimentacao && (
         <NovaAlimentacaoModal
           aquario={aquario}
-          onClose={() => setShowNovaAlimentacao(false)}
-          onSaved={nova => {
-            setAlimentacoes([nova, ...alimentacoes]);
+          onClose={() => {
             setShowNovaAlimentacao(false);
+            setAlimentacaoEditando(null);
           }}
+          onSaved={handleSavedAlimentacao}
+          alimentacaoParaEditar={alimentacaoEditando}
         />
       )}
 

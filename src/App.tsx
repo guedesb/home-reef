@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LocalDatabase } from './data/database';
+import { filtrarMedicoesAtivas } from './domain/analytics_engine';
 import { Aquario, Parametro } from './domain/models';
 import { AquarioModal } from './presentation/components/AquarioModal';
 import { BottomNavBar, TabType } from './presentation/components/BottomNavBar';
 import { Header } from './presentation/components/Header';
 import { AnimaisScreen } from './presentation/screens/animais/AnimaisScreen';
 import { DiarioScreen } from './presentation/screens/diario/DiarioScreen';
+import { EquipamentosScreen } from './presentation/screens/equipamentos/EquipamentosScreen';
 import { InicioDashboardScreen } from './presentation/screens/inicio/InicioDashboardScreen';
 import { DetalheParametroScreen } from './presentation/screens/parametros/DetalheParametroScreen';
 import { NovaMedicaoScreen } from './presentation/screens/parametros/NovaMedicaoScreen';
@@ -37,6 +39,24 @@ export default function App() {
   };
 
   const currentAquario = aquarios.find(a => a.id === activeAquarioId) || aquarios[0];
+
+  // Telemetria real em tempo de execução para o Header
+  const { realTemp, realSal } = useMemo(() => {
+    if (!currentAquario) return { realTemp: null, realSal: null };
+    const medicoes = LocalDatabase.getMedicoes(currentAquario.id);
+    const ativas = filtrarMedicoesAtivas(medicoes);
+    
+    const tempP = parametros.find(p => p.codigo === 'TEMP' || p.codigo === 'Temp' || p.nome.toLowerCase().includes('temperatura'));
+    const salP = parametros.find(p => p.codigo === 'SAL' || p.codigo === 'Salinidade' || p.unidade_canonica === 'sg' || p.unidade_canonica === 'ppt');
+
+    const ultT = tempP ? ativas.filter(m => m.parametro_id === tempP.id).pop() : null;
+    const ultS = salP ? ativas.filter(m => m.parametro_id === salP.id).pop() : null;
+
+    return {
+      realTemp: ultT ? ultT.valor : null,
+      realSal: ultS ? ultS.valor : null
+    };
+  }, [currentAquario, parametros, LocalDatabase]);
 
   const handleSelectAquario = (id: string) => {
     LocalDatabase.setActiveAquarioId(id);
@@ -101,8 +121,8 @@ export default function App() {
       {/* Cabeçalho Fixo */}
       <Header
         aquario={currentAquario}
-        tempAtual={25.4}
-        salinidadeAtual={1.025}
+        tempAtual={realTemp}
+        salinidadeAtual={realSal}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
@@ -137,6 +157,8 @@ export default function App() {
 
         {activeTab === 'animais' && <AnimaisScreen aquario={currentAquario} />}
 
+        {activeTab === 'equipamentos' && <EquipamentosScreen aquario={currentAquario} />}
+
         {activeTab === 'diario' && <DiarioScreen aquario={currentAquario} />}
       </main>
 
@@ -158,6 +180,7 @@ export default function App() {
           onSelectAquario={handleSelectAquario}
           onSaveAquario={handleSaveAquario}
           onClose={() => setIsSettingsOpen(false)}
+          onOpenEquipamentos={() => setActiveTab('equipamentos')}
         />
       )}
     </div>

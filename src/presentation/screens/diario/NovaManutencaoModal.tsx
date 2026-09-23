@@ -6,6 +6,7 @@ interface NovaManutencaoModalProps {
   aquario: Aquario;
   onClose: () => void;
   onSaved: (manutencao: Manutencao) => void;
+  manutencaoParaEditar?: Manutencao | null;
 }
 
 const TIPOS_MANUTENCAO = [
@@ -21,18 +22,27 @@ const TIPOS_MANUTENCAO = [
 export const NovaManutencaoModal: React.FC<NovaManutencaoModalProps> = ({
   aquario,
   onClose,
-  onSaved
+  onSaved,
+  manutencaoParaEditar
 }) => {
-  const [tipo, setTipo] = useState<string>('TPA');
+  const [tipo, setTipo] = useState<string>(manutencaoParaEditar?.tipo || 'TPA');
   const [dataHora, setDataHora] = useState<string>(
-    new Date().toISOString().slice(0, 16)
+    manutencaoParaEditar?.data
+      ? manutencaoParaEditar.data.slice(0, 16)
+      : new Date().toISOString().slice(0, 16)
   );
-  const [descricao, setDescricao] = useState<string>('');
+  const [descricao, setDescricao] = useState<string>(manutencaoParaEditar?.descricao || '');
   
   // Específicos para TPA
-  const [volumeTpa, setVolumeTpa] = useState<string>('40');
-  const [salMarca, setSalMarca] = useState<string>('Tropic Marin Pro Reef');
-  const [salinidadePrep, setSalinidadePrep] = useState<string>('1.025');
+  const [volumeTpa, setVolumeTpa] = useState<string>(
+    manutencaoParaEditar?.volume_tpa ? String(manutencaoParaEditar.volume_tpa) : '40'
+  );
+  const [salMarca, setSalMarca] = useState<string>(
+    manutencaoParaEditar?.sal_marca || 'Tropic Marin Pro Reef'
+  );
+  const [salinidadePrep, setSalinidadePrep] = useState<string>(
+    manutencaoParaEditar?.salinidade_preparada ? String(manutencaoParaEditar.salinidade_preparada) : '1.025'
+  );
 
   const isTpa = tipo === 'TPA';
   const volNum = parseFloat(volumeTpa) || 0;
@@ -42,17 +52,30 @@ export const NovaManutencaoModal: React.FC<NovaManutencaoModalProps> = ({
     e.preventDefault();
     if (!descricao.trim()) return;
 
-    const nova: Manutencao = LocalDatabase.addManutencao({
-      aquario_id: aquario.id,
-      tipo,
-      data: dataHora,
-      descricao: descricao.trim(),
-      volume_tpa: isTpa ? volNum : null,
-      sal_marca: isTpa ? salMarca.trim() || undefined : undefined,
-      salinidade_preparada: isTpa ? parseFloat(salinidadePrep) || undefined : undefined
-    });
-
-    onSaved(nova);
+    if (manutencaoParaEditar) {
+      const atualizada: Manutencao = {
+        ...manutencaoParaEditar,
+        tipo,
+        data: dataHora,
+        descricao: descricao.trim(),
+        volume_tpa: isTpa ? volNum : null,
+        sal_marca: isTpa ? salMarca.trim() || undefined : undefined,
+        salinidade_preparada: isTpa ? parseFloat(salinidadePrep) || undefined : undefined
+      };
+      LocalDatabase.updateManutencao(atualizada);
+      onSaved(atualizada);
+    } else {
+      const nova: Manutencao = LocalDatabase.addManutencao({
+        aquario_id: aquario.id,
+        tipo,
+        data: dataHora,
+        descricao: descricao.trim(),
+        volume_tpa: isTpa ? volNum : null,
+        sal_marca: isTpa ? salMarca.trim() || undefined : undefined,
+        salinidade_preparada: isTpa ? parseFloat(salinidadePrep) || undefined : undefined
+      });
+      onSaved(nova);
+    }
   };
 
   return (

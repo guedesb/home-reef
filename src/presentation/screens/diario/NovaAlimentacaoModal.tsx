@@ -6,6 +6,7 @@ interface NovaAlimentacaoModalProps {
   aquario: Aquario;
   onClose: () => void;
   onSaved: (alimentacao: Alimentacao) => void;
+  alimentacaoParaEditar?: Alimentacao | null;
 }
 
 const ALIMENTOS_PREDEFINIDOS = [
@@ -21,12 +22,17 @@ const ALIMENTOS_PREDEFINIDOS = [
 export const NovaAlimentacaoModal: React.FC<NovaAlimentacaoModalProps> = ({
   aquario,
   onClose,
-  onSaved
+  onSaved,
+  alimentacaoParaEditar
 }) => {
-  const [dataHora, setDataHora] = useState(new Date().toISOString().slice(0, 16));
-  const [alimento, setAlimento] = useState('');
-  const [quantidade, setQuantidade] = useState('');
-  const [observacao, setObservacao] = useState('');
+  const [dataHora, setDataHora] = useState(
+    alimentacaoParaEditar?.data_hora
+      ? alimentacaoParaEditar.data_hora.slice(0, 16)
+      : new Date().toISOString().slice(0, 16)
+  );
+  const [alimento, setAlimento] = useState(alimentacaoParaEditar?.alimento || '');
+  const [quantidade, setQuantidade] = useState(alimentacaoParaEditar?.quantidade || '');
+  const [observacao, setObservacao] = useState(alimentacaoParaEditar?.observacao || '');
 
   const handleSelectPreset = (item: { nome: string; qtd: string }) => {
     setAlimento(item.nome);
@@ -37,15 +43,26 @@ export const NovaAlimentacaoModal: React.FC<NovaAlimentacaoModalProps> = ({
     e.preventDefault();
     if (!alimento.trim() || !quantidade.trim()) return;
 
-    const nova = LocalDatabase.addAlimentacao({
-      aquario_id: aquario.id,
-      data_hora: dataHora,
-      alimento: alimento.trim(),
-      quantidade: quantidade.trim(),
-      observacao: observacao.trim() || undefined
-    });
-
-    onSaved(nova);
+    if (alimentacaoParaEditar) {
+      const atualizada: Alimentacao = {
+        ...alimentacaoParaEditar,
+        data_hora: dataHora,
+        alimento: alimento.trim(),
+        quantidade: quantidade.trim(),
+        observacao: observacao.trim() || undefined
+      };
+      LocalDatabase.updateAlimentacao(atualizada);
+      onSaved(atualizada);
+    } else {
+      const nova = LocalDatabase.addAlimentacao({
+        aquario_id: aquario.id,
+        data_hora: dataHora,
+        alimento: alimento.trim(),
+        quantidade: quantidade.trim(),
+        observacao: observacao.trim() || undefined
+      });
+      onSaved(nova);
+    }
   };
 
   return (
@@ -59,7 +76,7 @@ export const NovaAlimentacaoModal: React.FC<NovaAlimentacaoModalProps> = ({
             </div>
             <div>
               <h3 className="font-sans text-sm font-semibold text-[#d3e5f2]">
-                Registrar Alimentação
+                {alimentacaoParaEditar ? 'Editar Alimentação' : 'Registrar Alimentação'}
               </h3>
               <p className="text-[10px] text-[#879390]">Dieta da fauna & nutrição de corais</p>
             </div>

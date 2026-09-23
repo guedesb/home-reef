@@ -72,14 +72,14 @@ const SEED_MEDICOES: Medicao[] = [
   { id: 'm-ph-2', aquario_id: 'aq-principal', parametro_id: 'param-ph', valor: 8.18, data_hora: '2025-03-28T15:40:00', metodo: 'Eletrodo BNC' }
 ];
 
-// Seed Animals matching Stitch dashboard: 8 peixes, 14 invert, 26 corais, 2 cardumes
+// Seed Animals matching Stitch dashboard: 8 peixes (1 tang + 2 casal palhaço + 1 blênio + 5 chromis (grupo/cardume) = 9 ou individuados), 14 invert, 26 corais
 const SEED_ANIMAIS: Animal[] = [
-  { id: 'an-1', aquario_id: 'aq-principal', tipo: 'individuo', especie: 'Zebrasoma flavescens', nome_popular: 'Yellow Tang', data_entrada: '2024-02-10', origem: 'Criatório Certificado', localizacao_habitual: 'Coluna d\'água livre' },
-  { id: 'an-2', aquario_id: 'aq-principal', tipo: 'individuo', especie: 'Amphiprion ocellaris', nome_popular: 'Casal Palhaço Ocellaris', data_entrada: '2024-01-20', origem: 'Nacional', localizacao_habitual: 'Anêmona BBT' },
-  { id: 'an-3', aquario_id: 'aq-principal', tipo: 'individuo', especie: 'Salarias fasciatus', nome_popular: 'Blênio Macaco', data_entrada: '2024-03-01', origem: 'Importado', localizacao_habitual: 'Rochas basais' },
-  { id: 'an-4', aquario_id: 'aq-principal', tipo: 'grupo', especie: 'Chromis viridis', nome_popular: 'Cardume Green Chromis', data_entrada: '2024-02-15', quantidade: 5, localizacao_habitual: 'Topo do rochedo' },
-  { id: 'an-5', aquario_id: 'aq-principal', tipo: 'grupo', especie: 'Nassarius & Turbo', nome_popular: 'Equipe de Limpeza (Snails)', data_entrada: '2024-01-18', quantidade: 14, localizacao_habitual: 'Substrato e vidros' },
-  { id: 'an-6', aquario_id: 'aq-principal', tipo: 'grupo', especie: 'Acropora & Zoanthus', nome_popular: 'Mudas de Corais Variados', data_entrada: '2024-03-05', quantidade: 26, localizacao_habitual: 'Aquarscape' }
+  { id: 'an-1', aquario_id: 'aq-principal', tipo: 'individuo', categoria: 'peixe', especie: 'Zebrasoma flavescens', nome_popular: 'Yellow Tang', data_entrada: '2024-02-10', origem: 'Criatório Certificado', localizacao_habitual: 'Coluna d\'água livre' },
+  { id: 'an-2', aquario_id: 'aq-principal', tipo: 'individuo', categoria: 'peixe', especie: 'Amphiprion ocellaris', nome_popular: 'Casal Palhaço Ocellaris', data_entrada: '2024-01-20', quantidade: 2, origem: 'Nacional', localizacao_habitual: 'Anêmona BBT' },
+  { id: 'an-3', aquario_id: 'aq-principal', tipo: 'individuo', categoria: 'peixe', especie: 'Salarias fasciatus', nome_popular: 'Blênio Macaco', data_entrada: '2024-03-01', origem: 'Importado', localizacao_habitual: 'Rochas basais' },
+  { id: 'an-4', aquario_id: 'aq-principal', tipo: 'grupo', categoria: 'peixe', especie: 'Chromis viridis', nome_popular: 'Cardume Green Chromis', data_entrada: '2024-02-15', quantidade: 5, localizacao_habitual: 'Topo do rochedo' },
+  { id: 'an-5', aquario_id: 'aq-principal', tipo: 'grupo', categoria: 'invertebrado', especie: 'Nassarius & Turbo', nome_popular: 'Equipe de Limpeza (Snails)', data_entrada: '2024-01-18', quantidade: 14, localizacao_habitual: 'Substrato e vidros' },
+  { id: 'an-6', aquario_id: 'aq-principal', tipo: 'grupo', categoria: 'coral', especie: 'Acropora & Zoanthus', nome_popular: 'Mudas de Corais Variados', data_entrada: '2024-03-05', quantidade: 26, localizacao_habitual: 'Aquarscape' }
 ];
 
 // Seed recent maintenance & events
@@ -116,6 +116,21 @@ const SEED_DIARIOS: Diario[] = [
   }
 ];
 
+const SEED_EQUIPAMENTOS: Equipamento[] = [
+  { id: 'eq-1', aquario_id: 'aq-principal', tipo: 'Skimmer', descricao: 'Bubble Magus Curve 7 - Bomba Rock SP2000' },
+  { id: 'eq-2', aquario_id: 'aq-principal', tipo: 'Iluminação', descricao: '2x Radion XR15 G6 Pro (Schedule AB+)' },
+  { id: 'eq-3', aquario_id: 'aq-principal', tipo: 'Circulação', descricao: '2x Nero 5 (Modo Pulse e Reef Crest)' },
+  { id: 'eq-4', aquario_id: 'aq-principal', tipo: 'Retorno', descricao: 'Jebao DCP-5000 (Vazão em 60%)' },
+  { id: 'eq-5', aquario_id: 'aq-principal', tipo: 'Aquecimento / Resfriamento', descricao: 'Termostato Eheim 300W + Coel TLZ11 com Ventoinhas' },
+  { id: 'eq-6', aquario_id: 'aq-principal', tipo: 'Dosadora', descricao: 'Jebao Dosing Pump DP-4 (Balling 3 partes)' }
+];
+
+const SEED_EQUIPAMENTOS_HIST: EquipamentoHistorico[] = [
+  { id: 'eqh-1', equipamento_id: 'eq-1', data: '2024-01-16', alteracao: 'Instalação inicial e regulagem de altura no sump (21cm)' },
+  { id: 'eqh-2', equipamento_id: 'eq-2', data: '2024-02-01', alteracao: 'Ajuste de aclimatação de corais: rampa de subida em 50%' },
+  { id: 'eqh-3', equipamento_id: 'eq-6', data: '2024-03-10', alteracao: 'Calibração dos cabeçotes dosadores com proveta graduada de 100ml' }
+];
+
 export class LocalDatabase {
   private static getItem<T>(key: string, defaultVal: T): T {
     try {
@@ -133,6 +148,12 @@ export class LocalDatabase {
     } catch (e) {
       console.error('Storage error:', e);
     }
+  }
+
+  public static generateId(prefix: string): string {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    return `${prefix}-${timestamp}-${random}`;
   }
 
   // Inicialização com dados padrão caso vazio
@@ -161,6 +182,12 @@ export class LocalDatabase {
     }
     if (!localStorage.getItem(STORAGE_KEYS.DIARIOS)) {
       this.setItem(STORAGE_KEYS.DIARIOS, SEED_DIARIOS);
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.EQUIPAMENTOS)) {
+      this.setItem(STORAGE_KEYS.EQUIPAMENTOS, SEED_EQUIPAMENTOS);
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.EQUIPAMENTOS_HIST)) {
+      this.setItem(STORAGE_KEYS.EQUIPAMENTOS_HIST, SEED_EQUIPAMENTOS_HIST);
     }
   }
 
@@ -219,11 +246,17 @@ export class LocalDatabase {
     const list = this.getItem<Medicao[]>(STORAGE_KEYS.MEDICOES, SEED_MEDICOES);
     const newMedicao: Medicao = {
       ...medicao,
-      id: medicao.id || `m-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+      id: medicao.id || this.generateId('m')
     };
     list.push(newMedicao);
     this.setItem(STORAGE_KEYS.MEDICOES, list);
     return newMedicao;
+  }
+
+  public static deleteMedicao(id: string): void {
+    const list = this.getItem<Medicao[]>(STORAGE_KEYS.MEDICOES, SEED_MEDICOES);
+    const filtered = list.filter(m => m.id !== id);
+    this.setItem(STORAGE_KEYS.MEDICOES, filtered);
   }
 
   /**
@@ -241,7 +274,7 @@ export class LocalDatabase {
 
     for (const item of medicoes) {
       const nova: Medicao = {
-        id: `m-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        id: this.generateId('m'),
         aquario_id: aquarioId,
         parametro_id: item.parametroId,
         valor: item.valor,
@@ -268,7 +301,7 @@ export class LocalDatabase {
     const list = this.getItem<Animal[]>(STORAGE_KEYS.ANIMAIS, SEED_ANIMAIS);
     const novo: Animal = {
       ...animal,
-      id: `an-${Date.now()}`
+      id: this.generateId('an')
     };
     list.push(novo);
     this.setItem(STORAGE_KEYS.ANIMAIS, list);
@@ -284,6 +317,17 @@ export class LocalDatabase {
     }
   }
 
+  public static deleteAnimal(id: string): void {
+    const list = this.getItem<Animal[]>(STORAGE_KEYS.ANIMAIS, SEED_ANIMAIS);
+    const filtered = list.filter(a => a.id !== id);
+    this.setItem(STORAGE_KEYS.ANIMAIS, filtered);
+
+    // Remove também eventos atrelados ao animal
+    const eventos = this.getItem<EventoAnimal[]>(STORAGE_KEYS.EVENTOS_ANIMAIS, SEED_EVENTOS_ANIMAIS);
+    const evFiltered = eventos.filter(e => e.animal_id !== id);
+    this.setItem(STORAGE_KEYS.EVENTOS_ANIMAIS, evFiltered);
+  }
+
   // --- EVENTOS DE ANIMAIS ---
   public static getEventosAnimal(animalId?: string): EventoAnimal[] {
     const list = this.getItem<EventoAnimal[]>(STORAGE_KEYS.EVENTOS_ANIMAIS, SEED_EVENTOS_ANIMAIS);
@@ -295,11 +339,17 @@ export class LocalDatabase {
     const list = this.getItem<EventoAnimal[]>(STORAGE_KEYS.EVENTOS_ANIMAIS, SEED_EVENTOS_ANIMAIS);
     const novo: EventoAnimal = {
       ...evento,
-      id: `ev-${Date.now()}`
+      id: this.generateId('ev')
     };
     list.unshift(novo);
     this.setItem(STORAGE_KEYS.EVENTOS_ANIMAIS, list);
     return novo;
+  }
+
+  public static deleteEventoAnimal(id: string): void {
+    const list = this.getItem<EventoAnimal[]>(STORAGE_KEYS.EVENTOS_ANIMAIS, SEED_EVENTOS_ANIMAIS);
+    const filtered = list.filter(e => e.id !== id);
+    this.setItem(STORAGE_KEYS.EVENTOS_ANIMAIS, filtered);
   }
 
   // --- MANUTENÇÕES ---
@@ -313,11 +363,27 @@ export class LocalDatabase {
     const list = this.getItem<Manutencao[]>(STORAGE_KEYS.MANUTENCOES, SEED_MANUTENCOES);
     const nova: Manutencao = {
       ...manutencao,
-      id: `man-${Date.now()}`
+      id: this.generateId('man')
     };
     list.push(nova);
     this.setItem(STORAGE_KEYS.MANUTENCOES, list);
     return nova;
+  }
+
+  public static updateManutencao(manutencao: Manutencao): Manutencao {
+    const list = this.getItem<Manutencao[]>(STORAGE_KEYS.MANUTENCOES, SEED_MANUTENCOES);
+    const index = list.findIndex(m => m.id === manutencao.id);
+    if (index >= 0) {
+      list[index] = manutencao;
+      this.setItem(STORAGE_KEYS.MANUTENCOES, list);
+    }
+    return manutencao;
+  }
+
+  public static deleteManutencao(id: string): void {
+    const list = this.getItem<Manutencao[]>(STORAGE_KEYS.MANUTENCOES, SEED_MANUTENCOES);
+    const filtered = list.filter(m => m.id !== id);
+    this.setItem(STORAGE_KEYS.MANUTENCOES, filtered);
   }
 
   // --- ALIMENTAÇÕES ---
@@ -331,26 +397,112 @@ export class LocalDatabase {
     const list = this.getItem<Alimentacao[]>(STORAGE_KEYS.ALIMENTACOES, SEED_ALIMENTACOES);
     const nova: Alimentacao = {
       ...alimentacao,
-      id: `alim-${Date.now()}`
+      id: this.generateId('alim')
     };
     list.unshift(nova);
     this.setItem(STORAGE_KEYS.ALIMENTACOES, list);
     return nova;
   }
 
+  public static updateAlimentacao(alimentacao: Alimentacao): Alimentacao {
+    const list = this.getItem<Alimentacao[]>(STORAGE_KEYS.ALIMENTACOES, SEED_ALIMENTACOES);
+    const index = list.findIndex(a => a.id === alimentacao.id);
+    if (index >= 0) {
+      list[index] = alimentacao;
+      this.setItem(STORAGE_KEYS.ALIMENTACOES, list);
+    }
+    return alimentacao;
+  }
+
+  public static deleteAlimentacao(id: string): void {
+    const list = this.getItem<Alimentacao[]>(STORAGE_KEYS.ALIMENTACOES, SEED_ALIMENTACOES);
+    const filtered = list.filter(a => a.id !== id);
+    this.setItem(STORAGE_KEYS.ALIMENTACOES, filtered);
+  }
+
   // --- DIÁRIOS ---
   public static getDiarios(aquarioId?: string): Diario[] {
-    return this.getItem<Diario[]>(STORAGE_KEYS.DIARIOS, []);
+    const list = this.getItem<Diario[]>(STORAGE_KEYS.DIARIOS, SEED_DIARIOS);
+    if (!aquarioId) return list;
+    return list.filter(d => d.aquario_id === aquarioId);
   }
 
   public static addDiario(diario: Omit<Diario, 'id'>): Diario {
-    const list = this.getDiarios();
+    const list = this.getItem<Diario[]>(STORAGE_KEYS.DIARIOS, SEED_DIARIOS);
     const novo: Diario = {
       ...diario,
-      id: `dia-${Date.now()}`
+      id: this.generateId('dia')
+    };
+    list.unshift(novo);
+    this.setItem(STORAGE_KEYS.DIARIOS, list);
+    return novo;
+  }
+
+  public static updateDiario(diario: Diario): Diario {
+    const list = this.getItem<Diario[]>(STORAGE_KEYS.DIARIOS, SEED_DIARIOS);
+    const index = list.findIndex(d => d.id === diario.id);
+    if (index >= 0) {
+      list[index] = diario;
+      this.setItem(STORAGE_KEYS.DIARIOS, list);
+    }
+    return diario;
+  }
+
+  public static deleteDiario(id: string): void {
+    const list = this.getItem<Diario[]>(STORAGE_KEYS.DIARIOS, SEED_DIARIOS);
+    const filtered = list.filter(d => d.id !== id);
+    this.setItem(STORAGE_KEYS.DIARIOS, filtered);
+  }
+
+  // --- EQUIPAMENTOS ---
+  public static getEquipamentos(aquarioId?: string): Equipamento[] {
+    const list = this.getItem<Equipamento[]>(STORAGE_KEYS.EQUIPAMENTOS, SEED_EQUIPAMENTOS);
+    if (!aquarioId) return list;
+    return list.filter(e => e.aquario_id === aquarioId);
+  }
+
+  public static addEquipamento(equipamento: Omit<Equipamento, 'id'>): Equipamento {
+    const list = this.getItem<Equipamento[]>(STORAGE_KEYS.EQUIPAMENTOS, SEED_EQUIPAMENTOS);
+    const novo: Equipamento = {
+      ...equipamento,
+      id: this.generateId('eq')
     };
     list.push(novo);
-    this.setItem(STORAGE_KEYS.DIARIOS, list);
+    this.setItem(STORAGE_KEYS.EQUIPAMENTOS, list);
+    return novo;
+  }
+
+  public static updateEquipamento(equipamento: Equipamento): Equipamento {
+    const list = this.getItem<Equipamento[]>(STORAGE_KEYS.EQUIPAMENTOS, SEED_EQUIPAMENTOS);
+    const index = list.findIndex(e => e.id === equipamento.id);
+    if (index >= 0) {
+      list[index] = equipamento;
+      this.setItem(STORAGE_KEYS.EQUIPAMENTOS, list);
+    }
+    return equipamento;
+  }
+
+  public static deleteEquipamento(id: string): void {
+    const list = this.getItem<Equipamento[]>(STORAGE_KEYS.EQUIPAMENTOS, SEED_EQUIPAMENTOS);
+    const filtered = list.filter(e => e.id !== id);
+    this.setItem(STORAGE_KEYS.EQUIPAMENTOS, filtered);
+  }
+
+  // --- HISTÓRICO DE EQUIPAMENTOS ---
+  public static getEquipamentoHistorico(equipamentoId?: string): EquipamentoHistorico[] {
+    const list = this.getItem<EquipamentoHistorico[]>(STORAGE_KEYS.EQUIPAMENTOS_HIST, SEED_EQUIPAMENTOS_HIST);
+    if (!equipamentoId) return list;
+    return list.filter(h => h.equipamento_id === equipamentoId);
+  }
+
+  public static addEquipamentoHistorico(hist: Omit<EquipamentoHistorico, 'id'>): EquipamentoHistorico {
+    const list = this.getItem<EquipamentoHistorico[]>(STORAGE_KEYS.EQUIPAMENTOS_HIST, SEED_EQUIPAMENTOS_HIST);
+    const novo: EquipamentoHistorico = {
+      ...hist,
+      id: this.generateId('eqh')
+    };
+    list.unshift(novo);
+    this.setItem(STORAGE_KEYS.EQUIPAMENTOS_HIST, list);
     return novo;
   }
 }

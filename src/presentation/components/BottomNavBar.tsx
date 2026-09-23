@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type TabType = 'inicio' | 'parametros' | 'timeline' | 'animais' | 'diario';
+export type TabType = 'inicio' | 'parametros' | 'timeline' | 'animais' | 'equipamentos' | 'diario';
 
 interface BottomNavBarProps {
   activeTab: TabType;
@@ -13,6 +13,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeTab, onChangeT
     { id: 'parametros', label: 'Parâmetros', icon: 'speed' },
     { id: 'timeline', label: 'Timeline', icon: 'timeline' },
     { id: 'animais', label: 'Animais', icon: 'set_meal' },
+    { id: 'equipamentos', label: 'Setup', icon: 'build' },
     { id: 'diario', label: 'Diário', icon: 'menu_book' }
   ];
 

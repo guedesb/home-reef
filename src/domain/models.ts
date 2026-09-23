@@ -51,11 +51,13 @@ export interface Medicao {
 }
 
 export type TipoAnimal = 'individuo' | 'grupo';
+export type CategoriaAnimal = 'peixe' | 'invertebrado' | 'coral' | 'outro';
 
 export interface Animal {
   id: string;
   aquario_id: string;
   tipo: TipoAnimal;
+  categoria?: CategoriaAnimal;
   especie: string;
   nome_popular: string;
   data_entrada: string;

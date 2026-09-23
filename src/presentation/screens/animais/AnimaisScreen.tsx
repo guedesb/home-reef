@@ -14,6 +14,7 @@ export const AnimaisScreen: React.FC<AnimaisScreenProps> = ({ aquario }) => {
   const [animalSelecionado, setAnimalSelecionado] = useState<Animal | null>(null);
 
   const [tipo, setTipo] = useState<'individuo' | 'grupo'>('individuo');
+  const [categoria, setCategoria] = useState<'peixe' | 'invertebrado' | 'coral' | 'outro'>('peixe');
   const [nomePopular, setNomePopular] = useState('');
   const [especie, setEspecie] = useState('');
   const [quantidade, setQuantidade] = useState('1');
@@ -27,6 +28,7 @@ export const AnimaisScreen: React.FC<AnimaisScreenProps> = ({ aquario }) => {
     const novo = LocalDatabase.addAnimal({
       aquario_id: aquario.id,
       tipo,
+      categoria,
       nome_popular: nomePopular,
       especie: especie || 'Espécie não descrita',
       quantidade: tipo === 'grupo' ? parseInt(quantidade) || 1 : 1,
@@ -133,6 +135,10 @@ export const AnimaisScreen: React.FC<AnimaisScreenProps> = ({ aquario }) => {
             setAnimais(animais.map(a => (a.id === atualizado.id ? atualizado : a)));
             setAnimalSelecionado(atualizado);
           }}
+          onDelete={idDeletado => {
+            setAnimais(animais.filter(a => a.id !== idDeletado));
+            setAnimalSelecionado(null);
+          }}
         />
       )}
 
@@ -167,7 +173,7 @@ export const AnimaisScreen: React.FC<AnimaisScreenProps> = ({ aquario }) => {
                         : 'bg-[#0d1d26] border-[#273741] text-[#bdc9c6]'
                     }`}
                   >
-                    Indivíduo (Peixe/Invert)
+                    Indivíduo
                   </button>
                   <button
                     type="button"
@@ -178,8 +184,30 @@ export const AnimaisScreen: React.FC<AnimaisScreenProps> = ({ aquario }) => {
                         : 'bg-[#0d1d26] border-[#273741] text-[#bdc9c6]'
                     }`}
                   >
-                    Grupo / Lote (Cardume/Limpeza)
+                    Grupo / Lote / Cardume
                   </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono text-[10px] uppercase text-[#bdc9c6] mb-1">
+                  Categoria Biológica
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(['peixe', 'invertebrado', 'coral', 'outro'] as const).map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setCategoria(cat)}
+                      className={`py-1.5 rounded-lg font-mono text-[10px] uppercase border transition-colors ${
+                        categoria === cat
+                          ? 'bg-[#1c2c35] border-[#77dcce] text-[#77dcce] font-bold'
+                          : 'bg-[#0d1d26] border-[#273741] text-[#879390]'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
               </div>
 

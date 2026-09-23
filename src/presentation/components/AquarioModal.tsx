@@ -7,6 +7,7 @@ interface AquarioModalProps {
   onSelectAquario: (id: string) => void;
   onSaveAquario: (aq: Aquario) => void;
   onClose: () => void;
+  onOpenEquipamentos?: () => void;
 }
 
 export const AquarioModal: React.FC<AquarioModalProps> = ({
@@ -14,7 +15,8 @@ export const AquarioModal: React.FC<AquarioModalProps> = ({
   aquarios,
   onSelectAquario,
   onSaveAquario,
-  onClose
+  onClose,
+  onOpenEquipamentos
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nome, setNome] = useState(aquario.nome);
@@ -208,6 +210,20 @@ export const AquarioModal: React.FC<AquarioModalProps> = ({
                 <span className="material-symbols-outlined text-[16px]">edit</span>
                 <span>Editar Dados do Aquário</span>
               </button>
+
+              {onOpenEquipamentos && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenEquipamentos();
+                  }}
+                  className="w-full py-2.5 rounded-lg bg-[#0d1d26] hover:bg-[#1c2c35] border border-[#273741] text-[#8bcff2] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">build</span>
+                  <span>Gerenciar Hardware & Equipamentos</span>
+                </button>
+              )}
             </div>
           )}
         </div>
