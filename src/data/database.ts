@@ -327,6 +327,17 @@ export class LocalDatabase {
     return list.filter(a => a.aquario_id === aquarioId);
   }
 
+  public static addAlimentacao(alimentacao: Omit<Alimentacao, 'id'>): Alimentacao {
+    const list = this.getItem<Alimentacao[]>(STORAGE_KEYS.ALIMENTACOES, SEED_ALIMENTACOES);
+    const nova: Alimentacao = {
+      ...alimentacao,
+      id: `alim-${Date.now()}`
+    };
+    list.unshift(nova);
+    this.setItem(STORAGE_KEYS.ALIMENTACOES, list);
+    return nova;
+  }
+
   // --- DIÁRIOS ---
   public static getDiarios(aquarioId?: string): Diario[] {
     return this.getItem<Diario[]>(STORAGE_KEYS.DIARIOS, []);

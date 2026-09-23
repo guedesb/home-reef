@@ -8,7 +8,7 @@ interface InicioDashboardScreenProps {
   parametros: Parametro[];
   onOpenNovaMedicao: () => void;
   onSelectParametro: (p: Parametro) => void;
-  onNavigateToTab: (tab: 'inicio' | 'parametros' | 'animais' | 'diario') => void;
+  onNavigateToTab: (tab: 'inicio' | 'parametros' | 'timeline' | 'animais' | 'diario') => void;
 }
 
 export const InicioDashboardScreen: React.FC<InicioDashboardScreenProps> = ({
@@ -313,7 +313,7 @@ export const InicioDashboardScreen: React.FC<InicioDashboardScreenProps> = ({
             </h2>
           </div>
           <button
-            onClick={() => onNavigateToTab('diario')}
+            onClick={() => onNavigateToTab('timeline')}
             className="font-mono text-xs text-[#77dcce] hover:underline flex items-center gap-0.5"
           >
             <span>Ver tudo</span>

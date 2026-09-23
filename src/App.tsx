@@ -10,6 +10,7 @@ import { InicioDashboardScreen } from './presentation/screens/inicio/InicioDashb
 import { DetalheParametroScreen } from './presentation/screens/parametros/DetalheParametroScreen';
 import { NovaMedicaoScreen } from './presentation/screens/parametros/NovaMedicaoScreen';
 import { ParametrosConsoleScreen } from './presentation/screens/parametros/ParametrosConsoleScreen';
+import { LinhaDoTempoScreen } from './presentation/screens/timeline/LinhaDoTempoScreen';
 
 export default function App() {
   // Inicialização local-first
@@ -123,6 +124,14 @@ export default function App() {
             parametros={parametros}
             onSelectParametro={p => setSelectedParametro(p)}
             onOpenNovaBateria={() => setIsNovaMedicaoOpen(true)}
+          />
+        )}
+
+        {activeTab === 'timeline' && (
+          <LinhaDoTempoScreen
+            aquario={currentAquario}
+            parametros={parametros}
+            onOpenNovaMedicao={() => setIsNovaMedicaoOpen(true)}
           />
         )}
 

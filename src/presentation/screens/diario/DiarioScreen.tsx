@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { LocalDatabase } from '../../../data/database';
 import { runAnalyticalEngineTests, TestResult } from '../../../domain/analytics_engine.test';
-import { Aquario, Diario, Manutencao } from '../../../domain/models';
+import { Alimentacao, Aquario, Diario, Manutencao } from '../../../domain/models';
+import { NovaAlimentacaoModal } from './NovaAlimentacaoModal';
 import { NovaManutencaoModal } from './NovaManutencaoModal';
 
 interface DiarioScreenProps {
@@ -11,8 +12,10 @@ interface DiarioScreenProps {
 export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
   const [diarios, setDiarios] = useState<Diario[]>(LocalDatabase.getDiarios(aquario.id));
   const [manutencoes, setManutencoes] = useState<Manutencao[]>(LocalDatabase.getManutencoes(aquario.id));
+  const [alimentacoes, setAlimentacoes] = useState<Alimentacao[]>(LocalDatabase.getAlimentacoes(aquario.id));
   const [showNovoDiario, setShowNovoDiario] = useState(false);
   const [showNovaManutencao, setShowNovaManutencao] = useState(false);
+  const [showNovaAlimentacao, setShowNovaAlimentacao] = useState(false);
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [filtroTipo, setFiltroTipo] = useState<string>('todos');
@@ -95,13 +98,20 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
           </h2>
           <p className="text-xs text-[#879390]">Prontuário histórico do aquarista</p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
           <button
             onClick={executarTestes}
             title="Executar Testes do Motor Analítico"
             className="p-2 rounded-lg bg-[#0d1d26] border border-[#273741] hover:border-[#77dcce] text-[#77dcce] flex items-center justify-center text-xs"
           >
             <span className="material-symbols-outlined text-[18px]">bug_report</span>
+          </button>
+          <button
+            onClick={() => setShowNovaAlimentacao(true)}
+            className="flex items-center gap-1 bg-[#1c2c35] hover:bg-[#273741] border border-[#273741] text-[#8bcff2] font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-[15px]">restaurant</span>
+            <span>+ Dieta</span>
           </button>
           <button
             onClick={() => setShowNovaManutencao(true)}
@@ -239,6 +249,58 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
                 </div>
               );
             })
+          )}
+        </div>
+      </section>
+
+      {/* Seção de Alimentação e Dieta */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[#8bcff2] text-[18px]">restaurant</span>
+            <h3 className="font-sans text-xs font-semibold text-[#d3e5f2] uppercase tracking-wider">
+              Nutrição & Alimentação Recente ({alimentacoes.length})
+            </h3>
+          </div>
+          <button
+            onClick={() => setShowNovaAlimentacao(true)}
+            className="text-xs text-[#8bcff2] hover:underline font-mono"
+          >
+            + Registrar
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {alimentacoes.length === 0 ? (
+            <div className="p-3 text-center text-xs text-[#879390] bg-[#0d1d26] rounded border border-[#273741]">
+              Nenhuma alimentação registrada. Clique em "+ Dieta" para registrar.
+            </div>
+          ) : (
+            alimentacoes.slice(0, 4).map(al => (
+              <div key={al.id} className="p-2.5 rounded-lg bg-[#0d1d26] border border-[#273741] flex items-start gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-[#8bcff2]/10 text-[#8bcff2] flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="material-symbols-outlined text-[16px]">restaurant</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center">
+                    <span className="font-sans text-xs font-semibold text-[#d3e5f2]">{al.alimento}</span>
+                    <span className="font-mono text-[10px] text-[#879390]">
+                      {new Date(al.data_hora).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • {new Date(al.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="font-mono text-[10px] text-[#77dcce] px-1.5 py-0.2 rounded bg-[#1c2c35]">
+                      Porção: {al.quantidade}
+                    </span>
+                    {al.observacao && (
+                      <span className="text-xs text-[#879390] truncate">
+                        • {al.observacao}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </section>
@@ -422,6 +484,18 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
           aquario={aquario}
           onClose={() => setShowNovaManutencao(false)}
           onSaved={handleSavedManutencao}
+        />
+      )}
+
+      {/* Modal Nova Alimentação */}
+      {showNovaAlimentacao && (
+        <NovaAlimentacaoModal
+          aquario={aquario}
+          onClose={() => setShowNovaAlimentacao(false)}
+          onSaved={nova => {
+            setAlimentacoes([nova, ...alimentacoes]);
+            setShowNovaAlimentacao(false);
+          }}
         />
       )}
 
