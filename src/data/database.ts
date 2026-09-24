@@ -89,7 +89,15 @@ const SEED_MANUTENCOES: Manutencao[] = [
 ];
 
 const SEED_ALIMENTACOES: Alimentacao[] = [
-  { id: 'alim-1', aquario_id: 'aq-principal', data_hora: '2025-03-27T19:15:00', alimento: 'Mysis enriquecido + Fitoplâncton vivo', quantidade: '1 cubo + 10ml', observacao: 'Todos os corais com pólipos abertos' }
+  {
+    id: 'alim-1',
+    aquario_id: 'aq-principal',
+    data_hora: '2025-03-27T19:15:00',
+    alimento: 'Mysis enriquecido + Fitoplâncton vivo',
+    quantidade: '1 cubo + 10ml',
+    observacao: 'Todos os corais com pólipos abertos',
+    animais_ids: ['an-1', 'an-2', 'an-6']
+  }
 ];
 
 const SEED_EVENTOS_ANIMAIS: EventoAnimal[] = [
@@ -134,6 +142,7 @@ const SEED_EQUIPAMENTOS_HIST: EquipamentoHistorico[] = [
 export class LocalDatabase {
   private static getItem<T>(key: string, defaultVal: T): T {
     try {
+      if (typeof localStorage === 'undefined') return defaultVal;
       const data = localStorage.getItem(key);
       if (!data) return defaultVal;
       return JSON.parse(data) as T;
@@ -144,6 +153,7 @@ export class LocalDatabase {
 
   private static setItem<T>(key: string, val: T): void {
     try {
+      if (typeof localStorage === 'undefined') return;
       localStorage.setItem(key, JSON.stringify(val));
     } catch (e) {
       console.error('Storage error:', e);
@@ -326,13 +336,41 @@ export class LocalDatabase {
     const eventos = this.getItem<EventoAnimal[]>(STORAGE_KEYS.EVENTOS_ANIMAIS, SEED_EVENTOS_ANIMAIS);
     const evFiltered = eventos.filter(e => e.animal_id !== id);
     this.setItem(STORAGE_KEYS.EVENTOS_ANIMAIS, evFiltered);
+
+    // Remove a vinculação do animal nas alimentações (N:N)
+    const alimentacoes = this.getItem<Alimentacao[]>(STORAGE_KEYS.ALIMENTACOES, SEED_ALIMENTACOES);
+    const alimAtualizadas = alimentacoes.map(al => {
+      if (al.animais_ids && al.animais_ids.includes(id)) {
+        return {
+          ...al,
+          animais_ids: al.animais_ids.filter(aid => aid !== id)
+        };
+      }
+      return al;
+    });
+    this.setItem(STORAGE_KEYS.ALIMENTACOES, alimAtualizadas);
   }
 
   // --- EVENTOS DE ANIMAIS ---
-  public static getEventosAnimal(animalId?: string): EventoAnimal[] {
+  public static getEventosAnimal(animalId?: string, aquarioId?: string): EventoAnimal[] {
     const list = this.getItem<EventoAnimal[]>(STORAGE_KEYS.EVENTOS_ANIMAIS, SEED_EVENTOS_ANIMAIS);
-    if (!animalId) return list;
-    return list.filter(e => e.animal_id === animalId);
+    let result = list;
+
+    if (animalId) {
+      result = result.filter(e => e.animal_id === animalId);
+    }
+
+    if (aquarioId) {
+      const animaisDoAquario = this.getAnimais(aquarioId);
+      const animalIdsSet = new Set(animaisDoAquario.map(a => a.id));
+      result = result.filter(e => animalIdsSet.has(e.animal_id));
+    }
+
+    return result;
+  }
+
+  public static getEventosAnimalPorAquario(aquarioId: string): EventoAnimal[] {
+    return this.getEventosAnimal(undefined, aquarioId);
   }
 
   public static addEventoAnimal(evento: Omit<EventoAnimal, 'id'>): EventoAnimal {
@@ -418,6 +456,11 @@ export class LocalDatabase {
     const list = this.getItem<Alimentacao[]>(STORAGE_KEYS.ALIMENTACOES, SEED_ALIMENTACOES);
     const filtered = list.filter(a => a.id !== id);
     this.setItem(STORAGE_KEYS.ALIMENTACOES, filtered);
+  }
+
+  public static getAlimentacoesPorAnimal(animalId: string): Alimentacao[] {
+    const list = this.getItem<Alimentacao[]>(STORAGE_KEYS.ALIMENTACOES, SEED_ALIMENTACOES);
+    return list.filter(a => a.animais_ids && a.animais_ids.includes(animalId));
   }
 
   // --- DIÁRIOS ---

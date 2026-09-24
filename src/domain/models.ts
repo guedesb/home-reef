@@ -101,6 +101,7 @@ export interface Alimentacao {
   alimento: string;
   quantidade: string;
   observacao?: string;
+  animais_ids?: string[]; // IDs dos animais direcionados (N:N). Se vazio/indefinido, alimentação geral do aquário.
 }
 
 // Modelos do Motor Analítico

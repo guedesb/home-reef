@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LocalDatabase } from '../../../data/database';
 import { runAnalyticalEngineTests, TestResult } from '../../../domain/analytics_verifier';
-import { Alimentacao, Aquario, Diario, Manutencao } from '../../../domain/models';
+import { Alimentacao, Animal, Aquario, Diario, Manutencao } from '../../../domain/models';
 import { NovaAlimentacaoModal } from './NovaAlimentacaoModal';
 import { NovaManutencaoModal } from './NovaManutencaoModal';
 
@@ -10,9 +10,22 @@ interface DiarioScreenProps {
 }
 
 export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
-  const [diarios, setDiarios] = useState<Diario[]>(LocalDatabase.getDiarios(aquario.id));
-  const [manutencoes, setManutencoes] = useState<Manutencao[]>(LocalDatabase.getManutencoes(aquario.id));
-  const [alimentacoes, setAlimentacoes] = useState<Alimentacao[]>(LocalDatabase.getAlimentacoes(aquario.id));
+  const [diarios, setDiarios] = useState<Diario[]>(() => LocalDatabase.getDiarios(aquario.id));
+  const [manutencoes, setManutencoes] = useState<Manutencao[]>(() => LocalDatabase.getManutencoes(aquario.id));
+  const [alimentacoes, setAlimentacoes] = useState<Alimentacao[]>(() => LocalDatabase.getAlimentacoes(aquario.id));
+  const [animais, setAnimais] = useState<Animal[]>(() => LocalDatabase.getAnimais(aquario.id));
+
+  // Sincronizar dados caso o aquário ativo mude
+  React.useEffect(() => {
+    setDiarios(LocalDatabase.getDiarios(aquario.id));
+    setManutencoes(LocalDatabase.getManutencoes(aquario.id));
+    setAlimentacoes(LocalDatabase.getAlimentacoes(aquario.id));
+    setAnimais(LocalDatabase.getAnimais(aquario.id));
+  }, [aquario.id]);
+
+  const animalMap = React.useMemo(() => {
+    return new Map<string, Animal>(animais.map(a => [a.id, a]));
+  }, [animais]);
 
   // Modals de criação/edição
   const [showNovoDiario, setShowNovoDiario] = useState(false);
@@ -416,6 +429,38 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
                       </span>
                     )}
                   </div>
+
+                  {/* Vínculo N:N com Animais */}
+                  {al.animais_ids && al.animais_ids.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                      <span className="font-mono text-[9px] text-[#879390] flex items-center gap-0.5">
+                        <span className="material-symbols-outlined text-[11px] text-[#77dcce]">share</span>
+                        Alvos:
+                      </span>
+                      {al.animais_ids.map(aid => {
+                        const an = animalMap.get(aid);
+                        if (!an) return null;
+                        return (
+                          <span
+                            key={aid}
+                            className="font-sans text-[9px] px-1.5 py-0.5 rounded bg-[#003732] text-[#77dcce] border border-[#77dcce]/30 flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[10px]">
+                              {an.categoria === 'coral' ? 'water' : 'set_meal'}
+                            </span>
+                            {an.nome_popular}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 mt-1.5">
+                      <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[#1c2c35] text-[#8bcff2] border border-[#273741] flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[10px]">public</span>
+                        Geral (Todo o tanque)
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))

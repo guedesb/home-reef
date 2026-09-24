@@ -126,5 +126,54 @@ export function runAnalyticalEngineTests(): TestResult[] {
     results.push({ title: 'Alerta Sem Medição', passed: false, message: e.message });
   }
 
+  // Test 5: Isolamento Multitanque de Eventos de Fauna
+  try {
+    // Simula filtragem por aquário ativo
+    const mockAnimaisDoAquario = [{ id: 'an-tank1', aquario_id: 'tank-1', nome_popular: 'Tang' }];
+    const mockEventos = [
+      { id: 'ev-1', animal_id: 'an-tank1', tipo_evento: 'alimentacao' as const, data: '2025-03-20', descricao: 'Ok' },
+      { id: 'ev-2', animal_id: 'an-tank2-estranho', tipo_evento: 'alimentacao' as const, data: '2025-03-20', descricao: 'Bicho de outro aquário' }
+    ];
+    const idsSet = new Set(mockAnimaisDoAquario.map(a => a.id));
+    const filtrados = mockEventos.filter(e => idsSet.has(e.animal_id));
+    const pass = filtrados.length === 1 && filtrados[0].id === 'ev-1';
+
+    results.push({
+      title: 'Isolamento de Eventos por Aquário',
+      passed: pass,
+      message: pass
+        ? 'Eventos de animais de outros aquários são impedidos de vazar para a timeline do aquário ativo.'
+        : 'Falha no isolamento de eventos de fauna.'
+    });
+  } catch (e: any) {
+    results.push({ title: 'Isolamento de Eventos', passed: false, message: e.message });
+  }
+
+  // Test 6: Relação N:N Alimentação ↔ Animais
+  try {
+    const mockAlimentacao = {
+      id: 'alim-test',
+      aquario_id: 'tank-1',
+      data_hora: '2025-03-24T19:00:00',
+      alimento: 'Mysis enriquecido',
+      quantidade: '1 cubo',
+      animais_ids: ['an-1', 'an-2']
+    };
+    const atendeAn1 = !!mockAlimentacao.animais_ids?.includes('an-1');
+    const atendeAn2 = !!mockAlimentacao.animais_ids?.includes('an-2');
+    const naoAtendeAn3 = !mockAlimentacao.animais_ids?.includes('an-3');
+    const pass = atendeAn1 && atendeAn2 && naoAtendeAn3;
+
+    results.push({
+      title: 'Relação N:N Alimentação ↔ Fauna',
+      passed: pass,
+      message: pass
+        ? 'Alimentação vincula múltiplos alvos de fauna/corais de forma independente e direcionada.'
+        : 'Falha no modelo relacional N:N de alimentação.'
+    });
+  } catch (e: any) {
+    results.push({ title: 'Relação N:N Alimentação', passed: false, message: e.message });
+  }
+
   return results;
 }

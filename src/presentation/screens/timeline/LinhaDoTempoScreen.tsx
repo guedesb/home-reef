@@ -28,12 +28,22 @@ export const LinhaDoTempoScreen: React.FC<LinhaDoTempoScreenProps> = ({
   parametros,
   onOpenNovaMedicao
 }) => {
-  const [medicoes] = useState<Medicao[]>(LocalDatabase.getMedicoes(aquario.id));
-  const [manutencoes, setManutencoes] = useState<Manutencao[]>(LocalDatabase.getManutencoes(aquario.id));
-  const [alimentacoes, setAlimentacoes] = useState<Alimentacao[]>(LocalDatabase.getAlimentacoes(aquario.id));
-  const [diarios, setDiarios] = useState<Diario[]>(LocalDatabase.getDiarios(aquario.id));
-  const [eventosAnimais] = useState<EventoAnimal[]>(LocalDatabase.getEventosAnimal());
-  const [animais] = useState<Animal[]>(LocalDatabase.getAnimais(aquario.id));
+  const [medicoes, setMedicoes] = useState<Medicao[]>(() => LocalDatabase.getMedicoes(aquario.id));
+  const [manutencoes, setManutencoes] = useState<Manutencao[]>(() => LocalDatabase.getManutencoes(aquario.id));
+  const [alimentacoes, setAlimentacoes] = useState<Alimentacao[]>(() => LocalDatabase.getAlimentacoes(aquario.id));
+  const [diarios, setDiarios] = useState<Diario[]>(() => LocalDatabase.getDiarios(aquario.id));
+  const [eventosAnimais, setEventosAnimais] = useState<EventoAnimal[]>(() => LocalDatabase.getEventosAnimal(undefined, aquario.id));
+  const [animais, setAnimais] = useState<Animal[]>(() => LocalDatabase.getAnimais(aquario.id));
+
+  // Sincronizar dados caso o aquário ativo mude
+  React.useEffect(() => {
+    setMedicoes(LocalDatabase.getMedicoes(aquario.id));
+    setManutencoes(LocalDatabase.getManutencoes(aquario.id));
+    setAlimentacoes(LocalDatabase.getAlimentacoes(aquario.id));
+    setDiarios(LocalDatabase.getDiarios(aquario.id));
+    setAnimais(LocalDatabase.getAnimais(aquario.id));
+    setEventosAnimais(LocalDatabase.getEventosAnimal(undefined, aquario.id));
+  }, [aquario.id]);
 
   // Modais de inclusão rápida
   const [showNovaAlimentacao, setShowNovaAlimentacao] = useState(false);
@@ -96,16 +106,23 @@ export const LinhaDoTempoScreen: React.FC<LinhaDoTempoScreenProps> = ({
 
     // 3. Alimentações
     alimentacoes.forEach(alim => {
+      const animaisDestino = alim.animais_ids && alim.animais_ids.length > 0
+        ? (alim.animais_ids.map(id => animalMap.get(id)?.nome_popular).filter(Boolean) as string[])
+        : [];
+      const isDirecionada = animaisDestino.length > 0;
+      const descricaoAlvos = isDirecionada ? `Alvo: ${animaisDestino.join(', ')}` : 'Geral (Aquário todo)';
+
       list.push({
         id: `alim-${alim.id}`,
         categoria: 'alimentacao',
         timestamp: alim.data_hora,
         titulo: `Alimentação: ${alim.alimento}`,
-        subtitulo: `Porção: ${alim.quantidade}${alim.observacao ? ` • ${alim.observacao}` : ''}`,
+        subtitulo: `Porção: ${alim.quantidade} • ${descricaoAlvos}${alim.observacao ? ` • ${alim.observacao}` : ''}`,
         icone: 'restaurant',
         corIcone: 'text-[#8bcff2] bg-[#8bcff2]/10',
-        detalheBadge: 'Dieta',
-        badgeCor: 'text-[#8bcff2] bg-[#002b40] border-[#8bcff2]/40'
+        tags: isDirecionada ? animaisDestino : ['Geral', 'Fauna'],
+        detalheBadge: isDirecionada ? (animaisDestino.length === 1 ? animaisDestino[0] : `${animaisDestino.length} animais`) : 'Geral',
+        badgeCor: isDirecionada ? 'text-[#77dcce] bg-[#003732] border-[#77dcce]/40' : 'text-[#8bcff2] bg-[#002b40] border-[#8bcff2]/40'
       });
     });
 
@@ -125,10 +142,11 @@ export const LinhaDoTempoScreen: React.FC<LinhaDoTempoScreenProps> = ({
       });
     });
 
-    // 5. Eventos da Fauna e Corais
+    // 5. Eventos da Fauna e Corais (Apenas animais do aquário ativo)
     eventosAnimais.forEach(ev => {
       const an = animalMap.get(ev.animal_id);
-      const nomeAnimal = an ? an.nome_popular : 'Animal';
+      if (!an) return; // NUNCA exibe eventos órfãos ou de animais pertencentes a outros aquários
+      const nomeAnimal = an.nome_popular;
       list.push({
         id: `ev-an-${ev.id}`,
         categoria: 'animal',
