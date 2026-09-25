@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { LocalDatabase } from '../../../data/database';
-import { runAnalyticalEngineTests, TestResult } from '../../../domain/analytics_verifier';
 import { Alimentacao, Animal, Aquario, Diario, Manutencao } from '../../../domain/models';
 import { NovaAlimentacaoModal } from './NovaAlimentacaoModal';
 import { NovaManutencaoModal } from './NovaManutencaoModal';
@@ -37,8 +36,6 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
   const [showNovaAlimentacao, setShowNovaAlimentacao] = useState(false);
   const [alimentacaoEditando, setAlimentacaoEditando] = useState<Alimentacao | null>(null);
 
-  const [showTestsModal, setShowTestsModal] = useState(false);
-  const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [filtroTipo, setFiltroTipo] = useState<string>('todos');
   const [tagFiltro, setTagFiltro] = useState<string>('todas');
   const [buscaTexto, setBuscaTexto] = useState<string>('');
@@ -169,12 +166,6 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
     return matchTag && matchBusca;
   });
 
-  const executarTestes = () => {
-    const res = runAnalyticalEngineTests();
-    setTestResults(res);
-    setShowTestsModal(true);
-  };
-
   // Filtragem de manutenções
   const manutencoesFiltradas = manutencoes.filter(m => {
     if (filtroTipo === 'todos') return true;
@@ -200,14 +191,6 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
           <p className="text-xs text-[#879390]">Prontuário histórico do aquarista</p>
         </div>
         <div className="flex gap-1.5">
-          <button
-            onClick={executarTestes}
-            className="flex items-center gap-1 bg-[#1c2c35] hover:bg-[#273741] text-[#77dcce] border border-[#77dcce]/30 font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all shadow"
-            title="Rodar testes unitários do motor analítico"
-          >
-            <span className="material-symbols-outlined text-[16px]">verified</span>
-            <span className="hidden sm:inline">Testes</span>
-          </button>
           <button
             onClick={handleAbrirNovaManutencao}
             className="flex items-center gap-1 bg-[#005e7d] hover:bg-[#00749b] text-[#d3e5f2] font-semibold text-xs px-2.5 py-1.5 rounded-lg active:scale-95 transition-all shadow"
@@ -685,54 +668,6 @@ export const DiarioScreen: React.FC<DiarioScreenProps> = ({ aquario }) => {
           onSaved={handleSavedAlimentacao}
           alimentacaoParaEditar={alimentacaoEditando}
         />
-      )}
-
-      {/* Modal de Testes Unitários do Motor Analítico */}
-      {showTestsModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3">
-          <div className="bg-[#11212b] border border-[#273741] w-full max-w-md rounded-xl p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-[#273741] pb-2">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#77dcce] text-[20px]">verified</span>
-                <h3 className="font-sans text-sm font-semibold text-[#d3e5f2]">
-                  Validação do Motor Analítico (Unit Tests)
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowTestsModal(false)}
-                className="w-7 h-7 rounded bg-[#1c2c35] text-[#bdc9c6] flex items-center justify-center"
-              >
-                <span className="material-symbols-outlined text-[16px]">close</span>
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {testResults.map((t, idx) => (
-                <div
-                  key={idx}
-                  className={`p-2.5 rounded border text-xs ${
-                    t.passed ? 'bg-[#003732]/20 border-[#77dcce]/40 text-[#d3e5f2]' : 'bg-[#93000a]/20 border-[#ffb4ab]/40 text-[#ffb4ab]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-semibold">
-                    <span>{t.title}</span>
-                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-[#04151e] uppercase">
-                      {t.passed ? 'PASSED ✓' : 'FAILED ✗'}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#879390] mt-1">{t.message}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setShowTestsModal(false)}
-              className="w-full py-2 bg-[#1c2c35] text-[#d3e5f2] rounded-lg text-xs font-semibold"
-            >
-              Fechar Validação
-            </button>
-          </div>
-        </div>
       )}
     </div>
   );
