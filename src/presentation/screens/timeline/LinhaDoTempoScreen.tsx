@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { LocalDatabase } from '../../../data/database';
 import { Alimentacao, Animal, Aquario, Diario, EventoAnimal, Manutencao, Medicao, Parametro } from '../../../domain/models';
+import { DiarioScreen } from '../diario/DiarioScreen';
 import { NovaAlimentacaoModal } from '../diario/NovaAlimentacaoModal';
 import { NovaManutencaoModal } from '../diario/NovaManutencaoModal';
 
@@ -20,14 +21,24 @@ export interface TimelineEventItem {
 interface LinhaDoTempoScreenProps {
   aquario: Aquario;
   parametros: Parametro[];
+  initialView?: 'timeline' | 'diario';
   onOpenNovaMedicao?: () => void;
 }
 
 export const LinhaDoTempoScreen: React.FC<LinhaDoTempoScreenProps> = ({
   aquario,
   parametros,
+  initialView = 'timeline',
   onOpenNovaMedicao
 }) => {
+  const [subView, setSubView] = useState<'timeline' | 'diario'>(initialView);
+
+  React.useEffect(() => {
+    if (initialView) {
+      setSubView(initialView);
+    }
+  }, [initialView]);
+
   const [medicoes, setMedicoes] = useState<Medicao[]>(() => LocalDatabase.getMedicoes(aquario.id));
   const [manutencoes, setManutencoes] = useState<Manutencao[]>(() => LocalDatabase.getManutencoes(aquario.id));
   const [alimentacoes, setAlimentacoes] = useState<Alimentacao[]>(() => LocalDatabase.getAlimentacoes(aquario.id));
@@ -195,16 +206,50 @@ export const LinhaDoTempoScreen: React.FC<LinhaDoTempoScreenProps> = ({
 
   return (
     <div className="flex flex-col w-full px-3 gap-3 pb-24 pt-1 max-w-md mx-auto">
-      {/* Header com Ações Rápidas de Inserção */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-sans text-sm font-semibold text-[#d3e5f2] flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[#77dcce] text-[18px]">timeline</span>
-            Linha do Tempo Geral
-          </h2>
-          <p className="text-xs text-[#879390]">Feed unificado de parâmetros, manejo e biologia</p>
-        </div>
+      {/* Seletor Segmentado de Visualização: Feed Geral vs Diário & TPAs */}
+      <div className="flex bg-[#0d1d26] p-1 rounded-xl border border-[#1c2c35]">
+        <button
+          type="button"
+          onClick={() => setSubView('timeline')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+            subView === 'timeline'
+              ? 'bg-[#1c2c35] text-[#77dcce] shadow-sm'
+              : 'text-[#879390] hover:text-[#d3e5f2]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">timeline</span>
+          <span>Feed da Timeline</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubView('diario')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+            subView === 'diario'
+              ? 'bg-[#1c2c35] text-[#77dcce] shadow-sm'
+              : 'text-[#879390] hover:text-[#d3e5f2]'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">menu_book</span>
+          <span>Diário & TPAs</span>
+        </button>
       </div>
+
+      {subView === 'diario' ? (
+        <div className="-mx-3 -mt-3">
+          <DiarioScreen aquario={aquario} />
+        </div>
+      ) : (
+        <>
+          {/* Header com Ações Rápidas de Inserção */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-sans text-sm font-semibold text-[#d3e5f2] flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[#77dcce] text-[18px]">timeline</span>
+                Linha do Tempo Geral
+              </h2>
+              <p className="text-xs text-[#879390]">Feed unificado de parâmetros, manejo e biologia</p>
+            </div>
+          </div>
 
       {/* Botões Rápidos de Registro */}
       <div className="grid grid-cols-4 gap-1.5">
@@ -423,6 +468,8 @@ export const LinhaDoTempoScreen: React.FC<LinhaDoTempoScreenProps> = ({
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

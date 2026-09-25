@@ -6,7 +6,6 @@ import { AquarioModal } from './presentation/components/AquarioModal';
 import { BottomNavBar, TabType } from './presentation/components/BottomNavBar';
 import { Header } from './presentation/components/Header';
 import { AnimaisScreen } from './presentation/screens/animais/AnimaisScreen';
-import { DiarioScreen } from './presentation/screens/diario/DiarioScreen';
 import { EquipamentosScreen } from './presentation/screens/equipamentos/EquipamentosScreen';
 import { InicioDashboardScreen } from './presentation/screens/inicio/InicioDashboardScreen';
 import { DetalheParametroScreen } from './presentation/screens/parametros/DetalheParametroScreen';
@@ -151,15 +150,40 @@ export default function App() {
           <LinhaDoTempoScreen
             aquario={currentAquario}
             parametros={parametros}
+            initialView="timeline"
             onOpenNovaMedicao={() => setIsNovaMedicaoOpen(true)}
           />
         )}
 
         {activeTab === 'animais' && <AnimaisScreen aquario={currentAquario} />}
 
-        {activeTab === 'equipamentos' && <EquipamentosScreen aquario={currentAquario} />}
+        {activeTab === 'equipamentos' && (
+          <div className="flex flex-col w-full">
+            <div className="flex items-center justify-between px-3 py-2 bg-[#0d1d26] border-b border-[#273741] sticky top-14 z-20">
+              <button
+                type="button"
+                onClick={() => setActiveTab('inicio')}
+                className="flex items-center gap-1 text-xs text-[#77dcce] hover:underline font-semibold"
+              >
+                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                <span>Voltar ao Início</span>
+              </button>
+              <span className="font-mono text-[10px] text-[#879390] uppercase tracking-wider">
+                Setup & Hardware
+              </span>
+            </div>
+            <EquipamentosScreen aquario={currentAquario} />
+          </div>
+        )}
 
-        {activeTab === 'diario' && <DiarioScreen aquario={currentAquario} />}
+        {activeTab === 'diario' && (
+          <LinhaDoTempoScreen
+            aquario={currentAquario}
+            parametros={parametros}
+            initialView="diario"
+            onOpenNovaMedicao={() => setIsNovaMedicaoOpen(true)}
+          />
+        )}
       </main>
 
       {/* Barra de Navegação Inferior Fixa */}
